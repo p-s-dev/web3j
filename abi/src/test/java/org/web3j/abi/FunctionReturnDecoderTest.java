@@ -20,10 +20,12 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
+import org.web3j.abi.datatypes.Address;
 import org.web3j.abi.datatypes.DynamicArray;
 import org.web3j.abi.datatypes.DynamicBytes;
 import org.web3j.abi.datatypes.Function;
 import org.web3j.abi.datatypes.StaticArray;
+import org.web3j.abi.datatypes.StaticStruct;
 import org.web3j.abi.datatypes.Type;
 import org.web3j.abi.datatypes.Uint;
 import org.web3j.abi.datatypes.Utf8String;
@@ -358,4 +360,125 @@ public class FunctionReturnDecoderTest {
         //                        new AbiV2TestFixture.Foo("id", "name"),
         //                        new AbiV2TestFixture.Bar(BigInteger.ONE, BigInteger.TEN)));
     }
+
+    @Test
+    public void testDecodeDynamicListStructs() {
+        List<org.web3j.abi.datatypes.Address> cTokens = Arrays.<Address>asList(new Address(160, "0x5d3a536E4D6DbD6114cc1Ead35777bAB948E3643"));
+        String account = "0x99FD1378ca799ED6772Fe7bCDC9B30B389518962";
+
+        final org.web3j.abi.datatypes.Function function = new org.web3j.abi.datatypes.Function("cTokenBalancesAll",
+                Arrays.<Type>asList(new DynamicArray<org.web3j.abi.datatypes.Address>(org.web3j.abi.datatypes.Address.class, cTokens) {}, new org.web3j.abi.datatypes.Address(160, account)),
+                Arrays.<TypeReference<?>>asList(new TypeReference<DynamicArray<CTokenBalances>>() {}));
+
+        String rawInput =
+                "0x0000000000000000000000000000000000000000000000000000000000000020"
+                        + "0000000000000000000000000000000000000000000000000000000000000001"
+                        + "0000000000000000000000005d3a536e4d6dbd6114cc1ead35777bab948e3643"
+                        + "0000000000000000000000000000000000000000000000000000000000000000"
+                        + "0000000000000000000000000000000000000000001109e094d05f4fe55b97b7"
+                        + "0000000000000000000000000000000000000000000000000000000000000000"
+                        + "0000000000000000000000000000000000000000000000000000000000000000"
+                        + "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
+
+        List<CTokenBalances> results = DynamicArray.class.cast(FunctionReturnDecoder.decode(rawInput, function.getOutputParameters()).get(0)).getValue();
+        assertEquals(
+                results,
+                Collections.singletonList(
+                        new CTokenBalances(
+                                "0x5d3a536E4D6DbD6114cc1Ead35777bAB948E3643",
+                                Numeric.toBigInt("0000000000000000000000000000000000000000000000000000000000000000"),
+                                Numeric.toBigInt("0000000000000000000000000000000000000000001109e094d05f4fe55b97b7"),
+                                Numeric.toBigInt("0000000000000000000000000000000000000000000000000000000000000000"),
+                                Numeric.toBigInt("0000000000000000000000000000000000000000000000000000000000000000"),
+                                Numeric.toBigInt("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")
+                                )));
+
+    }
+
+
+    @Test
+    public void testDecodeDynamicListMultipleStructs() {
+        List<org.web3j.abi.datatypes.Address> cTokens = Arrays.<Address>asList(new Address(160, "0x39AA39c021dfbaE8faC545936693aC917d5E7563"),new Address(160, "0x5d3a536E4D6DbD6114cc1Ead35777bAB948E3643"));
+        String account = "0xF123e9b47aa50265d01cb0b69B2B027Ab8e5470e";
+
+        final org.web3j.abi.datatypes.Function function = new org.web3j.abi.datatypes.Function("cTokenBalancesAll",
+                Arrays.<Type>asList(new DynamicArray<org.web3j.abi.datatypes.Address>(org.web3j.abi.datatypes.Address.class, cTokens) {}, new org.web3j.abi.datatypes.Address(160, account)),
+                Arrays.<TypeReference<?>>asList(new TypeReference<DynamicArray<CTokenBalances>>() {}));
+
+        String rawInput =
+                "0x0000000000000000000000000000000000000000000000000000000000000020"
+                        + "0000000000000000000000000000000000000000000000000000000000000002"
+                        + "00000000000000000000000039aa39c021dfbae8fac545936693ac917d5e7563"
+                        + "0000000000000000000000000000000000000000000000000002c806287396a9"
+                        + "00000000000000000000000000000000000000000000000000000028835b0e13"
+                        + "00000000000000000000000000000000000000000000000000000026db37bcfd"
+                        + "0000000000000000000000000000000000000000000000000000000000000000"
+                        + "ffffffffffffffffffffffffffffffffffffffffffffffffffffffaaa1d6613d"
+                        + "0000000000000000000000005d3a536e4d6dbd6114cc1ead35777bab948e3643"
+                        + "0000000000000000000000000000000000000000000000000000000000000000"
+                        + "0000000000000000000000000000000000000000000000000000000000000000"
+                        + "0000000000000000000000000000000000000000000000000000000000000000"
+                        + "00000000000000000000000000000000000000000000000010bbe2750471f6a6"
+                        + "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
+
+        List<CTokenBalances> results = DynamicArray.class.cast(FunctionReturnDecoder.decode(rawInput, function.getOutputParameters()).get(0)).getValue();
+        assertEquals(
+                results,
+                Arrays.asList(
+                        new CTokenBalances(
+                                "0x39AA39c021dfbaE8faC545936693aC917d5E7563",
+                                Numeric.toBigInt("0000000000000000000000000000000000000000000000000002c806287396a9"),
+                                Numeric.toBigInt("00000000000000000000000000000000000000000000000000000028835b0e13"),
+                                Numeric.toBigInt("00000000000000000000000000000000000000000000000000000026db37bcfd"),
+                                Numeric.toBigInt("0000000000000000000000000000000000000000000000000000000000000000"),
+                                Numeric.toBigInt("ffffffffffffffffffffffffffffffffffffffffffffffffffffffaaa1d6613d")
+                        ),
+                        new CTokenBalances(
+                                "0x5d3a536E4D6DbD6114cc1Ead35777bAB948E3643",
+                                Numeric.toBigInt("0000000000000000000000000000000000000000000000000000000000000000"),
+                                Numeric.toBigInt("0000000000000000000000000000000000000000000000000000000000000000"),
+                                Numeric.toBigInt("0000000000000000000000000000000000000000000000000000000000000000"),
+                                Numeric.toBigInt("00000000000000000000000000000000000000000000000010bbe2750471f6a6"),
+                                Numeric.toBigInt("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")
+                        )
+
+                ));
+
+    }
+
+
+
+    public static class CTokenBalances extends StaticStruct {
+        public String cToken;
+        public BigInteger balanceOf;
+        public BigInteger borrowBalanceCurrent;
+        public BigInteger balanceOfUnderlying;
+        public BigInteger tokenBalance;
+        public BigInteger tokenAllowance;
+
+        public CTokenBalances(String cToken, BigInteger balanceOf, BigInteger borrowBalanceCurrent, BigInteger balanceOfUnderlying, BigInteger tokenBalance, BigInteger tokenAllowance) {
+            super(new Address(cToken),new Uint256(balanceOf),new Uint256(borrowBalanceCurrent),new Uint256(balanceOfUnderlying),new Uint256(tokenBalance),new Uint256(tokenAllowance));
+            this.cToken = cToken;
+            this.balanceOf = balanceOf;
+            this.borrowBalanceCurrent = borrowBalanceCurrent;
+            this.balanceOfUnderlying = balanceOfUnderlying;
+            this.tokenBalance = tokenBalance;
+            this.tokenAllowance = tokenAllowance;
+        }
+
+        public CTokenBalances(Address cToken, Uint256 balanceOf, Uint256 borrowBalanceCurrent, Uint256 balanceOfUnderlying , Uint256 tokenBalance, Uint256 tokenAllowance) {
+            super(cToken,balanceOf,borrowBalanceCurrent,balanceOfUnderlying,tokenBalance,tokenAllowance);
+            this.cToken = cToken.getValue();
+            this.balanceOf = balanceOf.getValue();
+            this.borrowBalanceCurrent = borrowBalanceCurrent.getValue();
+            this.balanceOfUnderlying = balanceOfUnderlying.getValue();
+            this.tokenBalance = tokenBalance.getValue();
+            this.tokenAllowance = tokenAllowance.getValue();
+        }
+    }
+
+
+
+
+
 }

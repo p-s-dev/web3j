@@ -374,7 +374,7 @@ public class TypeDecoder {
             final int length = constructor.getParameterCount();
             List<T> elements = new ArrayList<>(length);
 
-            for (int i = 0, currOffset = 0; i < length; i++) {
+            for (int i = 0, currOffset = offset; i < length; i++) {
                 T value;
                 final Class<T> declaredField = (Class<T>) constructor.getParameterTypes()[i];
 
@@ -639,7 +639,25 @@ public class TypeDecoder {
 
         try {
             Class<T> cls = Utils.getParameterizedTypeFromArray(typeReference);
-            if (Array.class.isAssignableFrom(cls)) {
+            if (StaticStruct.class.isAssignableFrom(cls)) {
+
+                List<T> elements = new ArrayList<>(length);
+
+                for (int i = 0, currOffset = offset;
+                     i < length;
+                     i++,
+                             currOffset +=
+                                     (cls.getDeclaredFields().length - 1)
+                                             * MAX_BYTE_LENGTH_FOR_HEX_STRING) {
+                    T value = decodeStaticStruct(input, currOffset, TypeReference.create(cls));
+                    elements.add(value);
+                }
+
+                String typeName = Utils.getSimpleTypeName(cls);
+
+                return consumer.apply(elements, typeName);
+
+            } else if (Array.class.isAssignableFrom(cls)) {
                 throw new UnsupportedOperationException(
                         "Arrays of arrays are not currently supported for external functions, see"
                                 + "http://solidity.readthedocs.io/en/develop/types.html#members");
