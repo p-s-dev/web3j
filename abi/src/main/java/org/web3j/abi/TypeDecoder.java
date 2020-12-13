@@ -338,6 +338,11 @@ public class TypeDecoder {
         return decodeArrayElements(input, offset, typeReference, length, function);
     }
 
+    public static long staticStructLength(Class cls) {
+        // JaCoCo adds synthetic field in unit test
+        return Arrays.stream(cls.getDeclaredFields()).filter(f -> !f.isSynthetic()).count();
+    }
+
     public static <T extends Type> T decodeStaticStruct(
             final String input, final int offset, final TypeReference<T> typeReference) {
         BiFunction<List<T>, String, T> function =
@@ -644,11 +649,10 @@ public class TypeDecoder {
                 List<T> elements = new ArrayList<>(length);
 
                 for (int i = 0, currOffset = offset;
-                     i < length;
-                     i++,
-                             currOffset +=
-                                     (cls.getDeclaredFields().length - 1)
-                                             * MAX_BYTE_LENGTH_FOR_HEX_STRING) {
+                        i < length;
+                        i++,
+                                currOffset +=
+                                        staticStructLength(cls) * MAX_BYTE_LENGTH_FOR_HEX_STRING) {
                     T value = decodeStaticStruct(input, currOffset, TypeReference.create(cls));
                     elements.add(value);
                 }
